@@ -231,7 +231,7 @@ export default class MultiBlockSelectionPlugin {
             document.querySelectorAll(`.${this.CSS.temporaryBlockSelected}`)
                 .forEach(el => el.classList.remove(this.CSS.temporaryBlockSelected))
 
-        window.removeEventListener("mousedown", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
+        window.removeEventListener("mouseup", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
 
         toolbar.classList.remove(
             this.EditorCSS.inlineToolbarShowed,
@@ -264,7 +264,7 @@ export default class MultiBlockSelectionPlugin {
 
         // toolbar.style.left = `max(120px,${toolbar.style.left ?? "0px"})`
 
-        window.addEventListener("mousedown", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
+        window.addEventListener("mouseup", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
 
         this.isInlineOpen = true;
         this.onBeforeToolbarOpen?.(toolbar)

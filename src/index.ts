@@ -283,6 +283,13 @@ export default class MultiBlockSelectionPlugin {
         if (!this.isInlineOpen) return;
         if(this.isToolbarJustOpened) return;
         if (!(e.target instanceof HTMLElement)) return;
+        
+        // Vérifier si le clic se fait sur la toolbar
+        const toolbar = this.getInlineToolbar();
+        if (toolbar && (toolbar === e.target || toolbar.contains(e.target))) {
+            return; // Ne rien faire si le clic est sur la toolbar
+        }
+        
         if(this.preventToolbarCloseOnRedactorClick) {
             const isInsideOfRedactor = this.redactorElement === e.target || this.redactorElement?.contains(e.target)
             if (isInsideOfRedactor) return;

@@ -32,6 +32,11 @@ export type ConstructorProps = {
     * @default 200
     */
     toolbarHiddenTimeoutMs?: number;
+    /**
+    * If true, the toolbar will not close when clicking inside the redactor
+    * @default false
+    */
+    preventToolbarCloseOnRedactorClick?: boolean;
 };
 export type EditorVersions = {
     V30: `2.30${"" | ".0" | ".1" | ".2" | ".3" | ".4" | ".5" | ".6" | ".7"}`;
@@ -53,11 +58,13 @@ export default class MultiBlockSelectionPlugin {
     private editor;
     private editorVersion;
     private toolbarHiddenTimeoutMs;
+    private preventToolbarCloseOnRedactorClick;
     private observer;
     private selectedBlocks;
     private isInlineOpen;
+    private isToolbarJustOpened;
     private redactorElement;
-    constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs }: ConstructorProps);
+    constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs, preventToolbarCloseOnRedactorClick }: ConstructorProps);
     listen(): void;
     unlisten(): void;
     private get doBlocksHaveIds();
@@ -66,7 +73,7 @@ export default class MultiBlockSelectionPlugin {
     private get CSS();
     private syncSelectedBlocks;
     private initEditorListeners;
-    private onRedactorMouseUp;
+    private onMouseUp;
     private closeInlineToolbar;
     private openInlineToolbar;
     private globalClickListenerForToolbarClose;

@@ -33,6 +33,11 @@ export type ConstructorProps = {
     * @default 200
     */
     toolbarHiddenTimeoutMs?: number;
+    /**
+    * If true, the toolbar will not close when clicking inside the redactor
+    * @default false
+    */
+    preventToolbarCloseOnRedactorClick?: boolean;
 }
 export type EditorVersions = {
     V30: `2.30${"" | ".0" | ".1" | ".2" | ".3" | ".4" | ".5" | ".6" | ".7"}`
@@ -60,16 +65,19 @@ export default class MultiBlockSelectionPlugin {
     private editor: ConstructorProps['editor'];
     private editorVersion: ConstructorProps['version']
     private toolbarHiddenTimeoutMs: ConstructorProps['toolbarHiddenTimeoutMs']
+    private preventToolbarCloseOnRedactorClick: ConstructorProps['preventToolbarCloseOnRedactorClick']    
     private observer: MutationObserver;
     private selectedBlocks: SelectedBlock[] = [];
     private isInlineOpen = false;
+    private isToolbarJustOpened = false;
     private redactorElement: HTMLElement | null = null;
-    constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs = 200 }: ConstructorProps) {
+    constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs = 200, preventToolbarCloseOnRedactorClick = false }: ConstructorProps) {
         this.editor = editor;
         this.onBeforeToolbarOpen = onBeforeToolbarOpen;
         this.onAfterToolbarClose = onAfterToolbarClose;
         this.toolbarHiddenTimeoutMs = toolbarHiddenTimeoutMs;
         this.editorVersion = editorVersion;
+        this.preventToolbarCloseOnRedactorClick = preventToolbarCloseOnRedactorClick;
         if (!editorVersion)
             console.error("Missing editor 'version' parameter might make Multiselect Plugin to not work properly")
 
@@ -119,7 +127,7 @@ export default class MultiBlockSelectionPlugin {
 
     public unlisten() {
         this.observer?.disconnect();
-        this.redactorElement?.removeEventListener("mouseup", this.onRedactorMouseUp);
+        window.removeEventListener("mouseup", this.onMouseUp);
         this.redactorElement = null;
     }
 
@@ -171,10 +179,14 @@ export default class MultiBlockSelectionPlugin {
             childList: true,
             subtree: true,
         });
-        this.redactorElement.addEventListener("mouseup", this.onRedactorMouseUp);
+        window.addEventListener("mouseup", this.onMouseUp);
     }
 
-    private onRedactorMouseUp = (e: MouseEvent) => {
+    private onMouseUp = (e: MouseEvent) => {
+        if(this.isInlineOpen) {
+            return;
+        }
+
         if (!this.selectedBlocks.length) {
             this.closeInlineToolbar();
             return;
@@ -191,7 +203,13 @@ export default class MultiBlockSelectionPlugin {
         const el = this.getDOMBlockByIdOrIdx(blockId, index);
         if (!el) return;
 
+        this.isToolbarJustOpened = true;
+
         this.openInlineToolbar();
+
+        setTimeout(() => {
+            this.isToolbarJustOpened = false;
+        }, 0);
     };
 
     private closeInlineToolbar() {
@@ -206,7 +224,7 @@ export default class MultiBlockSelectionPlugin {
             document.querySelectorAll(`.${this.CSS.temporaryBlockSelected}`)
                 .forEach(el => el.classList.remove(this.CSS.temporaryBlockSelected))
 
-        window.removeEventListener("click", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
+        window.removeEventListener("mousedown", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
 
         toolbar.classList.remove(
             this.EditorCSS.inlineToolbarShowed,
@@ -239,7 +257,7 @@ export default class MultiBlockSelectionPlugin {
 
         // toolbar.style.left = `max(120px,${toolbar.style.left ?? "0px"})`
 
-        window.addEventListener("click", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
+        window.addEventListener("mousedown", this.globalClickListenerForToolbarClose.bind(this), { capture: true });
 
         this.isInlineOpen = true;
         this.onBeforeToolbarOpen?.(toolbar)
@@ -253,9 +271,12 @@ export default class MultiBlockSelectionPlugin {
 
     private globalClickListenerForToolbarClose(e: MouseEvent) {
         if (!this.isInlineOpen) return;
+        if(this.isToolbarJustOpened) return;
         if (!(e.target instanceof HTMLElement)) return;
-        const isInsideOfRedactor = this.redactorElement === e.target || this.redactorElement?.contains(e.target)
-        if (isInsideOfRedactor) return;
+        if(this.preventToolbarCloseOnRedactorClick) {
+            const isInsideOfRedactor = this.redactorElement === e.target || this.redactorElement?.contains(e.target)
+            if (isInsideOfRedactor) return;
+        }
 
         this.closeInlineToolbar();
     }

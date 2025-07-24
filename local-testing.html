@@ -6,7 +6,7 @@
         <title>Test indent</title>
         <script>
             if (!globalThis.Cypress) {
-                window.editorVersion = '2.30.8'
+                window.editorVersion = '2.27.2'
                 document.writeln(
                     `<script onload="window.dispatchEvent(new CustomEvent('loadded-editorjs-script'));" src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@${window.editorVersion}"><\/script>`,
                 )
@@ -20,7 +20,6 @@ https://cdn.jsdelivr.net/npm/@editorjs/header@2.8.7/dist/header.umd.min.js
 https://cdn.jsdelivr.net/npm/@editorjs/list@1.10.0/dist/list.umd.min.js
 "></script>
         <script src="https://cdn.jsdelivr.net/npm/@editorjs/underline@1.1.0/dist/bundle.min.js"></script>
-
         <script src="./dist/dev-build.js"></script>
         <style>
             .ce-block__content::before {
@@ -37,151 +36,21 @@ https://cdn.jsdelivr.net/npm/@editorjs/list@1.10.0/dist/list.umd.min.js
             .toolbarIsOpen [data-item-name='convert-to'] {
                 display: none;
             }
+
+            #editor {
+                width: 70%;
+                height: 300px;
+                margin: 0 auto;
+            }
         </style>
     </head>
     <body>
-        <div id="editor" style="background-color: antiquewhite" spellcheck="false"></div>
-        <script>
-            if (!globalThis.Cypress) {
-                queueMicrotask(() => {
-                    window.dispatchEvent(new CustomEvent('loadded-editorjs-script'))
-                })
-            }
-            window.addEventListener('loadded-editorjs-script', () => {
-                const version = window.editorVersion
-                const MultiBlockSelectionPlugin = self.MultiBlockSelectionPlugin
+        <div id="editor" style="background-color: antiquewhite" spellcheck="false">
 
-                let selectedBlocks = []
-                window.addEventListener(MultiBlockSelectionPlugin.SELECTION_CHANGE_EVENT, (ev) => {
-                    selectedBlocks = ev.detail.selectedBlocks.slice()
-                })
-
-                class ExtendedUnderline extends Underline {
-                    elementTagName = 'u'
-
-                    surround(range) {
-                        if (!selectedBlocks.length) {
-                            super.surround(range)
-                            return
-                        }
-                        let isAppliedOnAllSelectedBlocks = true
-                        // verify if it is applied to all selected blocks
-                        selectedBlocks.forEach(({ blockId, index }) => {
-                            const el = document.querySelector(`.codex-editor__redactor .ce-block:nth-child(${index + 1})`)
-                            if (!(el instanceof HTMLElement)) return
-
-                            const textEl = el.querySelector('[contenteditable=true]')
-                            if (!(textEl instanceof HTMLElement)) return
-                            const allText = el.textContent
-
-                            const firstBoldEl = textEl.querySelector(this.elementTagName)
-                            const isAppliedOnCurrentBlock = firstBoldEl && firstBoldEl.textContent == allText
-
-                            if (isAppliedOnCurrentBlock) return
-                            isAppliedOnAllSelectedBlocks = false
-                        })
-
-                        selectedBlocks.forEach(({ blockId, index }) => {
-                            // depending on your editor version you might have to use getByIndex();
-                            const block = this.api.blocks.getById(blockId)
-                            if (!block) return
-
-                            const el = block.holder
-                            if (!(el instanceof HTMLElement)) return
-
-                            const textEl = el.querySelector('[contenteditable=true]')
-                            if (!(textEl instanceof HTMLElement)) return
-                            const allText = el.textContent
-
-                            const firstUnderlineEl = textEl.querySelector(this.elementTagName)
-                            const isAppliedOnCurrentBlock = firstUnderlineEl && firstUnderlineEl.textContent == allText
-                            const shouldRemove = isAppliedOnAllSelectedBlocks
-                            const shouldAdd = !isAppliedOnAllSelectedBlocks && !isAppliedOnCurrentBlock
-
-                            if (shouldRemove) {
-                                textEl.querySelectorAll(this.elementTagName).forEach((b) => b.replaceWith(...b.childNodes))
-                                block.dispatchChange()
-                                return
-                            }
-
-                            if (!shouldAdd) return
-
-                            textEl.querySelectorAll(this.elementTagName).forEach((b) => b.replaceWith(...b.childNodes))
-
-                            const newUnderline = document.createElement(this.elementTagName)
-                            newUnderline.append(...textEl.childNodes)
-
-                            textEl.replaceChildren(newUnderline)
-                            block.dispatchChange()
-                        })
-                    }
-                }
-                const dataLocation = 'editorjs-data-testing'
-
-                let data = {}
-                try {
-                    data = JSON.parse(localStorage.getItem(dataLocation))
-                    // console.log('🚀 ~ data:', data)
-                } catch {}
-                var editor = new EditorJS({
-                    holder: 'editor',
-                    tools: {
-                        underline: {
-                            class: ExtendedUnderline,
-                        },
-                        list: {
-                            class: self.List,
-                        },
-                        header: {
-                            class: self.Header,
-                        },
-                    },
-                    // readOnly: true,
-                    // onChange(api) {
-                    //     api.saver.save().then((data) => {
-                    //         // localStorage.setItem(dataLocation, JSON.stringify(data))
-                    //     })
-                    // },
-                    data,
-                })
-
-                // console.log('🚀 ~ editor:', editor.configuration?.tools)
-                const blockSelection = new MultiBlockSelectionPlugin({
-                    editor,
-                    version: EditorJS.version,
-                    onBeforeToolbarOpen(toolbar) {
-                        if (!(toolbar instanceof HTMLElement)) return
-                        const dropdown = toolbar.querySelector('.ce-inline-toolbar__dropdown')
-                        if (dropdown instanceof HTMLElement) {
-                            dropdown.style.display = 'none'
-                        }
-                        toolbar.querySelectorAll('[data-tool]:not([data-tool=underline])').forEach((el) => {
-                            if (!(el instanceof HTMLElement)) return
-                            el.style.display = 'none'
-                        })
-                        toolbar.classList.add('toolbarIsOpen')
-                    },
-                    onAfterToolbarClose(toolbar) {
-                        if (!(toolbar instanceof HTMLElement)) return
-                        const dropdown = toolbar.querySelector('.ce-inline-toolbar__dropdown')
-                        if (dropdown instanceof HTMLElement) {
-                            dropdown.style.display = ''
-                        }
-                        toolbar.querySelectorAll('[data-tool]:not([data-tool=underline])').forEach((el) => {
-                            if (!(el instanceof HTMLElement)) return
-                            el.style.display = ''
-                        })
-                        setTimeout(() => {
-                            toolbar.classList.remove('toolbarIsOpen')
-                        }, 250)
-                    },
-                })
-
-                window.isEditorReady = editor.isReady.then(() => {
-                    // console.log('🚀 ~ editor.isReady.then ~ editor:', editor)
-                    blockSelection.listen()
-                })
-            })
-        </script>
+        </div>
+        <div id="editor2" style="background-color: red" spellcheck="false">
+        
+        </div>
+        <script src="./script.js"></script>
     </body>
 </html>

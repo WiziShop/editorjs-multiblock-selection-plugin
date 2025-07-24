@@ -187,6 +187,9 @@ export default class MultiBlockSelectionPlugin {
     }
 
     private onMouseUp = (e: MouseEvent) => {
+        console.log("onMouseUp");
+        console.log("onMouseUp this.isInlineOpen", this.isInlineOpen)
+        console.log("onMouseUp this.selectedBlocks", this.selectedBlocks)
         if(this.isInlineOpen) {
             return;
         }
@@ -274,6 +277,9 @@ export default class MultiBlockSelectionPlugin {
     }
 
     private globalClickListenerForToolbarClose(e: MouseEvent) {
+        console.log("globalClickListenerForToolbarClose");
+        console.log("globalClickListenerForToolbarClose this.isInlineOpen", this.isInlineOpen)
+        console.log("globalClickListenerForToolbarClose this.isToolbarJustOpened", this.isToolbarJustOpened)
         if (!this.isInlineOpen) return;
         if(this.isToolbarJustOpened) return;
         if (!(e.target instanceof HTMLElement)) return;

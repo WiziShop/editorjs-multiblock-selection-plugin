@@ -275,8 +275,14 @@ export default class MultiBlockSelectionPlugin {
 
     private globalClickListenerForToolbarClose(e: MouseEvent) {
         if (!this.isInlineOpen) return;
+        
         if(this.isToolbarJustOpened) return;
+        
         if (!(e.target instanceof HTMLElement)) return;
+        
+        const toolbar = this.getInlineToolbar();
+        if (toolbar && (toolbar === e.target || toolbar.contains(e.target))) return;
+
         if(this.preventToolbarCloseOnRedactorClick) {
             const isInsideOfRedactor = this.redactorElement === e.target || this.redactorElement?.contains(e.target)
             if (isInsideOfRedactor) return;

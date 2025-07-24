@@ -64,6 +64,7 @@ export default class MultiBlockSelectionPlugin {
     private isInlineOpen;
     private isToolbarJustOpened;
     private redactorElement;
+    private holderElement;
     constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs, preventToolbarCloseOnRedactorClick }: ConstructorProps);
     listen(): void;
     unlisten(): void;

@@ -71,6 +71,7 @@ export default class MultiBlockSelectionPlugin {
     private isInlineOpen = false;
     private isToolbarJustOpened = false;
     private redactorElement: HTMLElement | null = null;
+    private holderElement: HTMLElement | null = null;
     constructor({ editor, onBeforeToolbarOpen, onAfterToolbarClose, version: editorVersion, toolbarHiddenTimeoutMs = 200, preventToolbarCloseOnRedactorClick = false }: ConstructorProps) {
         this.editor = editor;
         this.onBeforeToolbarOpen = onBeforeToolbarOpen;
@@ -129,6 +130,7 @@ export default class MultiBlockSelectionPlugin {
         this.observer?.disconnect();
         window.removeEventListener("mouseup", this.onMouseUp);
         this.redactorElement = null;
+        this.holderElement = null;
     }
 
     private get doBlocksHaveIds() {
@@ -170,7 +172,8 @@ export default class MultiBlockSelectionPlugin {
     private initEditorListeners() {
         const { holder } = (this.editor as any).configuration;
         if (!holder) return;
-        this.redactorElement = document.querySelector(`[id='${holder}'] .${this.EditorCSS.redactor}`);
+        this.holderElement = document.querySelector(`[id='${holder}']`);
+        this.redactorElement = this.holderElement?.querySelector(`.${this.EditorCSS.redactor}`);
         if (!this.redactorElement) return;
 
         this.observer.observe(this.redactorElement, {
@@ -392,7 +395,7 @@ export default class MultiBlockSelectionPlugin {
     }
 
     private getInlineToolbar() {
-        const toolbar = document.querySelector(`.${this.EditorCSS.inlineToolbar}`);
+        const toolbar = this.holderElement?.querySelector(`.${this.EditorCSS.inlineToolbar}`);
         if (!(toolbar instanceof HTMLElement)) return null;
         return toolbar;
     }

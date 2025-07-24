@@ -173,7 +173,8 @@ export default class MultiBlockSelectionPlugin {
         const { holder } = (this.editor as any).configuration;
         if (!holder) return;
         this.holderElement = document.querySelector(`[id='${holder}']`);
-        this.redactorElement = this.holderElement?.querySelector(`.${this.EditorCSS.redactor}`);
+        const redactorElement = this.holderElement?.querySelector(`.${this.EditorCSS.redactor}`);
+        this.redactorElement = redactorElement as HTMLElement | null;
         if (!this.redactorElement) return;
 
         this.observer.observe(this.redactorElement, {
